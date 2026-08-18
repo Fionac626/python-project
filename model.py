@@ -1,22 +1,36 @@
+import re
+
 class Asset:
     def __init__(
-    self, 
-    asset_id,  #***-###
-    hostname,  #**##
-    ip_address,  
-    environment,   #Test or Production
-    internet_exposed, #True or False
-    business_impact,  #Low, Medium, High or Critical
-    operations_impact   #Low, Medium, High or Critical
+        self, 
+        asset_id,  
+        hostname,  
+        ip_address,  
+        environment,   #Test or Production
+        internet_exposed, #True or False
+        business_impact,  #Low, Medium, High or Critical
+        operations_impact   #Low, Medium, High or Critical
 ):
         self.asset_id = asset_id
         self.hostname = hostname
         self.ip_address = ip_address
+        allowed_environments = ["Production", "Test"]
+        environment = environment.title()
+        if environment not in allowed_environments:
+            raise ValueError("Environment must be Production or Test")
         self.environment = environment
         self.internet_exposed = internet_exposed
+        allowed_impacts = ["Low", "Medium", "High", "Critical"]
+        business_impact = business_impact.title()
+        if business_impact not in allowed_impacts:
+            raise ValueError("Business impact must be Low, Medium, High, or Critical")
         self.business_impact = business_impact
+        allowed_impacts = ["Low", "Medium", "High", "Critical"]
+        operations_impact = operations_impact.title()
+        if operations_impact not in allowed_impacts:
+            raise ValueError("Business impact must be Low, Medium, High, or Critical")
         self.operations_impact = operations_impact
-
+       
     def calculate_environmental_adjustment(self):
         adjustment = 0
 
@@ -42,17 +56,24 @@ class Asset:
     
 class Vulnerability:
     def __init__(
-    self,
-    cve,
-    cvss_score,
-    scanner_score,
-    vulnerability_description,
-    vendor_recommendation,
-    evidence
+        self,
+        cve,
+        cvss_score,
+        scanner_score,
+        vulnerability_description,
+        vendor_recommendation,
+        evidence
 ):
 
+        cve_pattern = r"^CVE-\d{4}-\d+$"
+        if not re.match(cve_pattern, cve):
+            raise ValueError("CVE format must be CVE-YYYY-NNNN")
         self.cve = cve
+        if cvss_score < 0 or cvss_score > 10:
+            raise ValueError("CVSS score must be between 0 and 10")
         self.cvss_score = cvss_score
+        if scanner_score < 0 or scanner_score > 10:
+            raise ValueError("Scanner score must be between 0 and 10")
         self.scanner_score = scanner_score
         self.vulnerability_description = vulnerability_description
         self.vendor_recommendation = vendor_recommendation
@@ -75,24 +96,26 @@ class Finding:
         adjustment = self.asset.calculate_environmental_adjustment()
 
         raw_score = original_score + adjustment
-        if raw_score > 10:
-            self.adjusted_risk_score = 10
-        else:
-            self.adjusted_risk_score = raw_score
-
+        self.adjusted_risk_score = max(0, min(raw_score, 10))
         return self.adjusted_risk_score
 
     def determine_priority(self):
+        if self.adjusted_risk_score is None:
+            self.calculate_adjusted_risk_score()
         if self.adjusted_risk_score == 10:
             self.adjusted_priority = "Critical"
-        elif self.adjusted_risk_score >= 8 and self.adjusted_risk_score <= 9.9:
+        elif self.adjusted_risk_score >= 8:
             self.adjusted_priority = "High"
-        elif self.adjusted_risk_score >= 5 and self.adjusted_risk_score <= 7.9:
+        elif self.adjusted_risk_score >= 5:
             self.adjusted_priority = "Medium"
-        else: 
+        else:
             self.adjusted_priority = "Low"
 
         return self.adjusted_priority
+
+    def evaluate(self):
+        self.calculate_adjusted_risk_score()
+        self.determine_priority()
     
     def generate_reasoning(self):
         reasons = []
@@ -123,7 +146,7 @@ class Finding:
         print("=" * 50)
         print(f"Asset: {self.asset.hostname}")
         print(f"IP Address: {self.asset.ip_address}")
-        print(f"Enviroment: {self.asset.environment}")
+        print(f"Environment: {self.asset.environment}")
         print()
         print(f"CVE: {self.vulnerability.cve}")
         print(f"Adjusted Risk Score: {self.adjusted_risk_score}")
