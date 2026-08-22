@@ -23,7 +23,6 @@ if __name__ == "__main__":
     vulnerability = Vulnerability(
         "CVE-2026-9851",
         7.2,
-        7.0,
         "The Booking Package plugin for WordPress is vulnerable to Privilege " 
         "Escalation via Account Takeover in versions up to, and including, 1.7.16. " 
         "This is due to a missing capability check on the 'updateUser' branch of the " 

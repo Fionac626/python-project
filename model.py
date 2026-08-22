@@ -59,7 +59,6 @@ class Vulnerability:
         self,
         cve,
         cvss_score,
-        scanner_score,
         vulnerability_description,
         vendor_recommendation,
         evidence
@@ -72,9 +71,6 @@ class Vulnerability:
         if cvss_score < 0 or cvss_score > 10:
             raise ValueError("CVSS score must be between 0 and 10")
         self.cvss_score = cvss_score
-        if scanner_score < 0 or scanner_score > 10:
-            raise ValueError("Scanner score must be between 0 and 10")
-        self.scanner_score = scanner_score
         self.vulnerability_description = vulnerability_description
         self.vendor_recommendation = vendor_recommendation
         self.evidence = evidence
@@ -149,6 +145,7 @@ class Finding:
         print(f"Environment: {self.asset.environment}")
         print()
         print(f"CVE: {self.vulnerability.cve}")
+        print(f"CVSS Base Score: {self.vulnerability.cvss_score}")
         print(f"Adjusted Risk Score: {self.adjusted_risk_score}")
         if self.adjusted_priority == "Critical":
             emoji = "🔴"
